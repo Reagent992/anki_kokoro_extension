@@ -1,0 +1,7 @@
+# Constants
+LOCAL_API_URL = "http://127.0.0.1:8880"
+CREATE_SPEECH_ENDPOINT = "/v1/audio/speech"
+HEALCH_CHECK_URL = "/v1/health"
+DEFAULT_AUDIO_FORMAT = "mp3"
+DEFAULT_VOICE = "af_heart"
+FILE_NAME_LEN = 10
