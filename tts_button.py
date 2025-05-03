@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import uuid
 from typing import ClassVar
 
 from aqt import mw
@@ -9,11 +8,10 @@ from aqt.editor import Editor
 from aqt.operations import QueryOp
 from aqt.utils import showInfo
 
-from .kokoro.manager import KokoroManager
+from .manager import KokoroManager
 
-from .kokoro.query_kokoro import send_request
-from .parser import strip_html
-from .settings import DEFAULT_AUDIO_FORMAT, FILE_NAME_LEN, Config
+from .utils import sanitize_filename, strip_html
+from .settings import Config
 
 """
 - [x] Добавить кнопку
@@ -38,8 +36,8 @@ from .settings import DEFAULT_AUDIO_FORMAT, FILE_NAME_LEN, Config
 - [x] При первом запуске происходит проверка health_status, и она поднимает ошибку. Это происходит из-за того что основной тред не дожидается wait_for_api_ready, ожидание происходит в бэкграунт треде. Нужен какой-то колбэк когда wait_for_api_ready вернуло True. И только тогда продолжать работу.
 - [x] Теперь с автозапуском все норм, а вот без него не отправляется реквест.
 Features:
-- [ ] Именовать аудио-файлы по началу озвучиваемого текста.
-- [ ] Добавить возможность изменять формат аудио-файла.
+- [x] Именовать аудио-файлы по началу озвучиваемого текста.
+- [x] Добавить возможность изменять формат аудио-файла.
 - [ ] Добавить автошатдаун процесса по таймеру.
 """
 
@@ -52,6 +50,7 @@ def create_config() -> Config:
         api_url=config["api_url"],
         autostart=config["autostart"] in ("true", "True", "1", "yes", "Yes"),
         path_to_exec=Path(config["path_to_kokoro_executable"]),
+        audio_format=config["audio_format"],
     )
 
 
@@ -63,23 +62,18 @@ class TTSButton:
     -  `__init__` called every time card editor is open.
     """
 
-    config: ClassVar[Config]
-    kokoro: ClassVar[KokoroManager]
+    config: ClassVar[Config] = create_config()
+    kokoro: ClassVar[KokoroManager] = KokoroManager(config)
 
     def __init__(self) -> None:
         self._field_index: int
         self._editor: Editor
         self._user_input: str | None
-        if not hasattr(TTSButton, "config") or not TTSButton.config:
-            TTSButton.config = create_config()
-        TTSButton.kokoro = KokoroManager(TTSButton.config)
 
     def __call__(self, editor: Editor) -> None:
         """This function will be called by pressing a button"""
         self._editor = editor
-        print("editor: ", editor)
         self._user_input = self._read_user_input()
-        print(self._user_input)
         if not self._user_input:
             showInfo("Please select a field and highlight text.")
             return
@@ -95,10 +89,10 @@ class TTSButton:
 
     def run_tts(self) -> None:
         if self._user_input:
-            clean_text = strip_html(self._user_input)
+            self.clean_text = strip_html(self._user_input)
             QueryOp(
                 parent=mw,
-                op=lambda _: send_request(clean_text, TTSButton.config),  # type: ignore
+                op=lambda _: TTSButton.kokoro.send_request(self.clean_text),  # type: ignore
                 success=self._send_request_callback,
             ).without_collection().run_in_background()
 
@@ -111,7 +105,6 @@ class TTSButton:
 
     def _read_user_input(self) -> str | None:
         assert self._editor.web and self._editor.note
-        print("currentField: ", self._editor.web.editor.currentField)
         if self._editor.web.editor.currentField in (None, ""):
             return None
         self._field_index = self._editor.web.editor.currentField
@@ -120,7 +113,7 @@ class TTSButton:
 
     def _add_media_to_collection(self, content: bytes) -> str:
         assert mw.col
-        file_name = f"{uuid.uuid4().hex[:FILE_NAME_LEN]}.{DEFAULT_AUDIO_FORMAT}"
+        file_name = f"{sanitize_filename(self.clean_text)}.{self.config.audio_format}"
         return mw.col.media.write_data(
             file_name,
             content,

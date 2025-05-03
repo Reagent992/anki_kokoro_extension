@@ -18,3 +18,4 @@ class Config:
     api_url: str = "http://127.0.0.1:8880"
     autostart: bool = False
     path_to_exec: Path = Path()
+    audio_format: str = DEFAULT_AUDIO_FORMAT

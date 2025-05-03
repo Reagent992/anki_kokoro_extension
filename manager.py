@@ -3,7 +3,13 @@ import os
 import signal
 from subprocess import Popen
 from time import sleep
-from ..settings import HEALCH_CHECK_URL, RETIRES_NUMBER, RETRY_DELAY, Config
+from .settings import (
+    CREATE_SPEECH_ENDPOINT,
+    HEALCH_CHECK_URL,
+    RETIRES_NUMBER,
+    RETRY_DELAY,
+    Config,
+)
 
 
 class KokoroManager:
@@ -50,3 +56,12 @@ class KokoroManager:
     def start_kokoro(self) -> bool:
         self._process = self._create_process()
         return self.wait_for_api_ready()
+
+    def send_request(self, string: str) -> bytes:
+        return requests.post(
+            self.config.api_url + CREATE_SPEECH_ENDPOINT,
+            json={
+                "input": string,
+                "voice": self.config.voice,
+            },
+        ).content
