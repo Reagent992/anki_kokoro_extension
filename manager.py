@@ -1,13 +1,19 @@
-import requests
 import os
 import signal
+import time
 from subprocess import Popen
 from time import sleep
+
+import requests
+from aqt.qt import QTimer
+
 from .settings import (
-    CREATE_SPEECH_ENDPOINT,
+    CHECK_INTERVAL_MSEC,
     HEALCH_CHECK_URL,
+    IDLE_TIMEOUT_SEC,
     RETIRES_NUMBER,
     RETRY_DELAY,
+    TTS_ENDPOINT,
     Config,
 )
 
@@ -17,10 +23,27 @@ class KokoroManager:
         self.config = config
         self._process: Popen | None = None
         self._is_kokoro_up: bool = False
+        self._last_used: float = time.time()
+        self._idle_timer: QTimer | None = None
+
+    def _on_idle_check(self) -> None:
+        if time.time() - self._last_used > IDLE_TIMEOUT_SEC:
+            self.shutdown_kokoro()
+            self._idle_timer = None
+
+    def start_idle_timer(self):
+        """Must be started from the main thread."""
+        if self._idle_timer is None:
+            self._idle_timer = QTimer()
+            self._idle_timer.setInterval(CHECK_INTERVAL_MSEC)
+            self._idle_timer.timeout.connect(self._on_idle_check)
+        self._idle_timer.start()
 
     def shutdown_kokoro(self) -> None:
         if self._process is not None:
             os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
+            self._is_kokoro_up = False
+            self._process = None
 
     def is_running(self) -> bool:
         return self._is_kokoro_up
@@ -58,8 +81,9 @@ class KokoroManager:
         return self.wait_for_api_ready()
 
     def send_request(self, string: str) -> bytes:
+        self._last_used = time.time()
         return requests.post(
-            self.config.api_url + CREATE_SPEECH_ENDPOINT,
+            self.config.api_url + TTS_ENDPOINT,
             json={
                 "input": string,
                 "voice": self.config.voice,

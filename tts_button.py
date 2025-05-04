@@ -13,34 +13,6 @@ from .manager import KokoroManager
 from .utils import sanitize_filename, strip_html
 from .settings import Config
 
-"""
-- [x] Добавить кнопку
-- [x] Считать выделенный текст или использовать весь введеный текст.
-- [x] Заставить кнопку выполнять request в api.
-  - [x] Делать это без блокировки UI.
-- [x] Добавлять полученный результат в медиатеку ANKI
-- [x] Чистить полученный текст от html [x] При повторном нажание читается весь инпут, а не только выделенный текст
-- [x] remove prints
-- [x] Перенести настройки в json
-- [x] Сделать функцию для чтения настроек внутри класса.
-- [x] Сделать автозапуск kokoro_tts
-    По нажатию кнопки перевода, kokoro_tts будет запускаться, и работать до момента закрытия ANKI.
-    Надо ли запускаться будет проверка по health эндпоинту.
-- [x] Кажись QueryOp плохой выбор для запуска фоновых процессов. Он нужен для операций на коллекции. Но если использовать обычный ThreadPoolExecutor то ANKI крашится. GPT советует использовать встроенные в QT средства.
-- [x] Документация ANKi рекомендует использовать QueryOp для network access.
-- [x] Запускать кокоро не блокирующим способом.
-- [x] Как автоматически тушить процесс?
-  - По таймеру
-  - По закрытию редактора текста
-- [x] Добавить проверку autostart. Запускать только с true.
-- [x] При первом запуске происходит проверка health_status, и она поднимает ошибку. Это происходит из-за того что основной тред не дожидается wait_for_api_ready, ожидание происходит в бэкграунт треде. Нужен какой-то колбэк когда wait_for_api_ready вернуло True. И только тогда продолжать работу.
-- [x] Теперь с автозапуском все норм, а вот без него не отправляется реквест.
-Features:
-- [x] Именовать аудио-файлы по началу озвучиваемого текста.
-- [x] Добавить возможность изменять формат аудио-файла.
-- [ ] Добавить автошатдаун процесса по таймеру.
-"""
-
 
 def create_config() -> Config:
     config = mw.addonManager.getConfig(__name__)
@@ -51,6 +23,8 @@ def create_config() -> Config:
         autostart=config["autostart"] in ("true", "True", "1", "yes", "Yes"),
         path_to_exec=Path(config["path_to_kokoro_executable"]),
         audio_format=config["audio_format"],
+        shutdown_by_timer=config["shutdown_by_timer"]
+        in ("true", "True", "1", "yes", "Yes"),
     )
 
 
@@ -102,6 +76,8 @@ class TTSButton:
             op=lambda _: TTSButton.kokoro.start_kokoro(),  # type: ignore
             success=self._start_kokoro_callback,
         ).without_collection().run_in_background()
+        if self.config.shutdown_by_timer:
+            self.kokoro.start_idle_timer()
 
     def _read_user_input(self) -> str | None:
         assert self._editor.web and self._editor.note

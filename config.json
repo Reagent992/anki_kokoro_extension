@@ -3,5 +3,6 @@
   "api_url": "http://127.0.0.1:8880",
   "autostart": "true",
   "path_to_kokoro_executable": "/home/rea/dev/external/Kokoro-FastAPI/start-gpu-siple.sh",
-  "audio_format": "mp3"
+  "audio_format": "mp3",
+  "shutdown_by_timer": "true"
 }
