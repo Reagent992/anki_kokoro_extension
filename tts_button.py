@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import ClassVar
 
 from aqt import mw
@@ -9,23 +8,8 @@ from aqt.operations import QueryOp
 from aqt.utils import showInfo
 
 from .manager import KokoroManager
-
-from .utils import sanitize_filename, strip_html
 from .settings import Config
-
-
-def create_config() -> Config:
-    config = mw.addonManager.getConfig(__name__)
-    assert config, "Something wrong with plugin config"
-    return Config(
-        voice=config["voice"],
-        api_url=config["api_url"],
-        autostart=config["autostart"] in ("true", "True", "1", "yes", "Yes"),
-        path_to_exec=Path(config["path_to_kokoro_executable"]),
-        audio_format=config["audio_format"],
-        shutdown_by_timer=config["shutdown_by_timer"]
-        in ("true", "True", "1", "yes", "Yes"),
-    )
+from .utils import create_config, sanitize_filename, strip_html
 
 
 class TTSButton:
