@@ -1,9 +1,10 @@
 from aqt.editor import Editor
 from aqt.gui_hooks import editor_did_init_buttons, profile_will_close
+
 from .tts_button import TTSButton
 
 
-def add_button(buttons: list[str], editor: Editor):
+def add_button(buttons: list[str], editor: Editor) -> None:
     """Add button to editor menu."""
     new_button = editor.addButton(
         None,

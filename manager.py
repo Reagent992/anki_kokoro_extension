@@ -9,9 +9,9 @@ from aqt.qt import QTimer
 
 from .settings import (
     CHECK_INTERVAL_MSEC,
-    HEALCH_CHECK_URL,
+    HEALTH_CHECK_URL,
     IDLE_TIMEOUT_SEC,
-    RETIRES_NUMBER,
+    RETRIES_NUMBER,
     RETRY_DELAY,
     TTS_ENDPOINT,
     Config,
@@ -31,7 +31,7 @@ class KokoroManager:
             self.shutdown_kokoro()
             self._idle_timer = None
 
-    def start_idle_timer(self):
+    def start_idle_timer(self) -> None:
         """Must be started from the main thread."""
         if self._idle_timer is None:
             self._idle_timer = QTimer()
@@ -51,7 +51,7 @@ class KokoroManager:
     def health_status(self) -> bool:
         try:
             requests.get(
-                self.config.api_url + HEALCH_CHECK_URL,
+                self.config.api_url + HEALTH_CHECK_URL,
             ).raise_for_status()
         except requests.ConnectionError:
             return False
@@ -59,14 +59,14 @@ class KokoroManager:
 
     def wait_for_api_ready(
         self,
-        retries: int = RETIRES_NUMBER,
+        retries: int = RETRIES_NUMBER,
         delay: float = RETRY_DELAY,
     ) -> bool:
-        for attemp in range(retries):
+        for attempt in range(retries):
             if self.health_status():
                 self._is_kokoro_up = True
                 return True
-            sleep(delay * attemp)
+            sleep(delay * attempt)
         raise TimeoutError()
 
     def _create_process(self) -> Popen:

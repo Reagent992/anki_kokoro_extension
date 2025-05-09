@@ -3,13 +3,13 @@ from pathlib import Path
 
 # Constants
 TTS_ENDPOINT = "/v1/audio/speech"
-HEALCH_CHECK_URL = "/health"
+HEALTH_CHECK_URL = "/health"
 DEFAULT_AUDIO_FORMAT = "mp3"
 DEFAULT_VOICE = "af_heart"
 FILE_NAME_LEN = 10
 ## health check
 RETRY_DELAY = 0.2
-RETIRES_NUMBER = 10
+RETRIES_NUMBER = 10
 ## shutdown by timeout
 IDLE_TIMEOUT_SEC = 60 * 2
 CHECK_INTERVAL_MSEC = 10_000  # 60_000 = 1 minute
