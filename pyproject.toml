@@ -1,5 +1,5 @@
 [project]
-name = "anki-extension"
+name = "anki-kokoro-extension"
 version = "0.1.0"
 description = "This is an Anki extension that integrates Kokoro-FastAPI to generate TTS (text-to-speech) audio from selected text in the card editor."
 readme = "README.md"
