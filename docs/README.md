@@ -1,6 +1,6 @@
 # Anki KokoroTTS Extension
 
-This is an **Anki** extension that integrates [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) to generate TTS (text-to-speech) audio from selected text in the card editor.
+This is an **Anki** extension that integrates [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) to generate TTS (text-to-speech) audio from selected text in the card editor. KokoroTTS is an LLM that runs on your local hardware, meaning it's free and you don't depend on external APIs.
 
 ![preview](./preview.gif)
 
@@ -45,6 +45,7 @@ This is an **Anki** extension that integrates [Kokoro-FastAPI](https://github.co
 
 ## Notes
 
+- Because the TTS button essentially launches another, "heavy" project, the first press may take some time—for me, it's around 7 seconds. However, since everything runs in parallel, you can continue filling out the card while Kokoro is loading.
 - Autostart and shutdown features require UNIX OS.
 - KokoroTTS server must be accessible at the configured `api_url`.
 - The extension will attempt to start the server if `autostart` is enabled.
