@@ -49,4 +49,5 @@ def create_config() -> Config:
         audio_format=config["audio_format"],
         shutdown_by_timer=config["shutdown_by_timer"]
         in ("true", "True", "1", "yes", "Yes"),
+        idle_timeout_in_seconds=config["idle_timeout_in_seconds"],
     )
