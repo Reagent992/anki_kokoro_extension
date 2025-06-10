@@ -79,7 +79,7 @@ class TTSButton:
             content,
         )
 
-    def _fill_field_with_audio(self, content: bytes):
+    def _fill_field_with_audio(self, content: bytes) -> None:
         assert self._editor.web and self._editor.note
         filename = self._add_media_to_collection(content)
         current_text = self._editor.note.fields[self._field_index]

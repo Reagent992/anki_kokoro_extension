@@ -1,18 +1,13 @@
 [project]
 name = "anki-extension"
 version = "0.1.0"
-description = "Add your description here"
+description = "This is an Anki extension that integrates Kokoro-FastAPI to generate TTS (text-to-speech) audio from selected text in the card editor."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "aqt>=25.2",
-    "requests>=2.32.3",
-]
+dependencies = ["aqt>=25.2", "requests>=2.32.3"]
 
 [dependency-groups]
-dev = [
-    "pytest>=8.3.5",
-]
+dev = ["pytest>=8.3.5"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests",]
+testpaths = ["tests"]

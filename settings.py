@@ -11,7 +11,6 @@ FILE_NAME_LEN = 10
 RETRY_DELAY = 0.2
 RETRIES_NUMBER = 10
 ## shutdown by timeout
-IDLE_TIMEOUT_SEC = 60 * 2
 CHECK_INTERVAL_MSEC = 10_000  # 60_000 = 1 minute
 
 
@@ -23,3 +22,4 @@ class Config:
     path_to_exec: Path = Path()
     audio_format: str = DEFAULT_AUDIO_FORMAT
     shutdown_by_timer: bool = False
+    idle_timeout_in_seconds: int = 60 * 2

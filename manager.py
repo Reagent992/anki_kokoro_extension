@@ -10,7 +10,6 @@ from aqt.qt import QTimer
 from .settings import (
     CHECK_INTERVAL_MSEC,
     HEALTH_CHECK_URL,
-    IDLE_TIMEOUT_SEC,
     RETRIES_NUMBER,
     RETRY_DELAY,
     TTS_ENDPOINT,
@@ -27,7 +26,7 @@ class KokoroManager:
         self._idle_timer: QTimer | None = None
 
     def _on_idle_check(self) -> None:
-        if time.time() - self._last_used > IDLE_TIMEOUT_SEC:
+        if time.time() - self._last_used > self.config.idle_timeout_in_seconds:
             self.shutdown_kokoro()
             self._idle_timer = None
 
