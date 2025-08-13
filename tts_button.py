@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from anki.notes import Note
 from aqt import mw
 from aqt.editor import Editor
-from aqt.operations import QueryOp
+from aqt.operations import CollectionOp, QueryOp
 from aqt.utils import showInfo
 
 from .manager import KokoroManager
@@ -27,10 +28,12 @@ class TTSButton:
         self._field_index: int
         self._editor: Editor
         self._user_input: str | None
+        self._note: Note | None
 
     def __call__(self, editor: Editor) -> None:
         """This function will be called by pressing a button"""
         self._editor = editor
+        self._note = self._editor.note
         self._user_input = self._read_user_input()
         if not self._user_input:
             showInfo("Please select a field and highlight text.")
@@ -80,13 +83,19 @@ class TTSButton:
         )
 
     def _fill_field_with_audio(self, content: bytes) -> None:
-        assert self._editor.web and self._editor.note
+        assert self._note
         filename = self._add_media_to_collection(content)
-        current_text = self._editor.note.fields[self._field_index]
-        self._editor.note.fields[self._field_index] = (
-            current_text + f"[sound:{filename}]"
-        )
-        self._editor.loadNote()
+        current_text = self._note.fields[self._field_index]
+        self._note.fields[self._field_index] = current_text + f"[sound:{filename}]"
+        if mw.col and self._note.id:
+            # Update existing note in the collection
+            CollectionOp(
+                parent=mw,
+                op=lambda col: col.update_note(self._note),  # type: ignore
+            ).run_in_background()
+        elif self._editor:
+            # If it's a new note, we should reload the editor
+            self._editor.loadNote()
 
     def _send_request_callback(self, content: bytes) -> None:
         self._fill_field_with_audio(content)
