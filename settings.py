@@ -8,7 +8,7 @@ DEFAULT_AUDIO_FORMAT = "mp3"
 DEFAULT_VOICE = "af_heart"
 FILE_NAME_LEN = 10
 ## health check
-RETRY_DELAY = 0.2
+RETRY_DELAY = 1
 RETRIES_NUMBER = 10
 ## shutdown by timeout
 CHECK_INTERVAL_MSEC = 10_000  # 60_000 = 1 minute
