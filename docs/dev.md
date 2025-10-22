@@ -4,3 +4,7 @@
 
 - [x] Update the existing note in the collection at the Background. This allows us to close the editor before TTS finishes its work.
 - [x] Fixed `TimeoutError`: the default startup time has increased from 1 to 10 seconds.
+
+## features backlog
+
+- add a keyboard shortcut
