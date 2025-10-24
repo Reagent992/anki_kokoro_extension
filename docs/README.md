@@ -49,6 +49,7 @@ This is an **Anki** extension that integrates [Kokoro-FastAPI](https://github.co
 - Autostart and shutdown features require UNIX OS.
 - KokoroTTS server must be accessible at the configured `api_url`.
 - The extension will attempt to start the server if `autostart` is enabled.
+- Keyboard shirtcut is: `Ctrl+Shift+T`
 
 ## License
 

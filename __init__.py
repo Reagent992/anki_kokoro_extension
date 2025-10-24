@@ -10,6 +10,8 @@ def add_button(buttons: list[str], editor: Editor) -> None:
         None,
         "TTS",
         TTSButton(),
+        tip="Create TTS (Ctrl+Shift+T)",
+        keys="Ctrl+Shift+T",
     )
     buttons.append(new_button)
 
