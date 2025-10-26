@@ -1,40 +1,39 @@
 from __future__ import annotations
 
+import logging
 from typing import ClassVar
 
-from anki.notes import Note
 from aqt import mw
 from aqt.editor import Editor
-from aqt.operations import CollectionOp, QueryOp
+from aqt.operations import QueryOp
 from aqt.utils import showInfo
 
 from .manager import KokoroManager
 from .settings import Config
-from .utils import create_config, sanitize_filename, strip_html
+from .tts_output_processor import TTSOutputProcessor
+from .tts_request import TTSRequest
+from .utils import create_config, strip_html
+
+logger = logging.getLogger(__name__)
 
 
 class TTSButton:
     """
     The object of this class is created by opening the ANKI card editor.
 
-    -  `__call__` method is called when the TTS button(UI) is pressed.
-    -  `__init__` called every time card editor is open.
+    `__call__` method is called when the TTS button(UI) is pressed.
     """
 
     config: ClassVar[Config] = create_config()
     kokoro: ClassVar[KokoroManager] = KokoroManager(config)
 
-    def __init__(self) -> None:
-        self._field_index: int
-        self._editor: Editor
-        self._user_input: str | None
-        self._note: Note | None
-
     def __call__(self, editor: Editor) -> None:
         """This function will be called by pressing a button"""
         self._editor = editor
-        self._note = self._editor.note
         self._user_input = self._read_user_input()
+        self._init_note_id = editor.note.id if editor.note else None
+        self._note_guid = editor.note.guid if editor.note else ""
+        logger.info(f"New Note guid: {self._note_guid}")
         if not self._user_input:
             showInfo("Please select a field and highlight text.")
             return
@@ -64,7 +63,7 @@ class TTSButton:
             success=self._start_kokoro_callback,
         ).without_collection().run_in_background()
         if self.config.shutdown_by_timer:
-            self.kokoro.start_idle_timer()
+            TTSButton.kokoro.start_idle_timer()
 
     def _read_user_input(self) -> str | None:
         assert self._editor.web and self._editor.note
@@ -74,31 +73,21 @@ class TTSButton:
         if page := self._editor.web.page():
             return page.selectedText()
 
-    def _add_media_to_collection(self, content: bytes) -> str:
-        assert mw.col
-        file_name = f"{sanitize_filename(self.clean_text)}.{self.config.audio_format}"
-        return mw.col.media.write_data(
-            file_name,
-            content,
-        )
-
-    def _fill_field_with_audio(self, content: bytes) -> None:
-        assert self._note
-        filename = self._add_media_to_collection(content)
-        current_text = self._note.fields[self._field_index]
-        self._note.fields[self._field_index] = current_text + f"[sound:{filename}]"
-        if mw.col and self._note.id:
-            # Update existing note in the collection
-            CollectionOp(
-                parent=mw,
-                op=lambda col: col.update_note(self._note),  # type: ignore
-            ).run_in_background()
-        elif self._editor:
-            # If it's a new note, we should reload the editor
-            self._editor.loadNote()
-
     def _send_request_callback(self, content: bytes) -> None:
-        self._fill_field_with_audio(content)
+        """
+        Callback triggered when TTS content is ready.
+        Delegate the processing and insertion of audio to TTSOutputProcessor.
+        """
+        request = TTSRequest(
+            editor=self._editor,
+            init_note_id=self._init_note_id,
+            field_index=self._field_index,
+            clean_text=self.clean_text,
+            note_guid=self._note_guid,
+            config=TTSButton.config,
+        )
+        processor = TTSOutputProcessor(request)
+        processor.process_audio(content)
 
     def _start_kokoro_callback(self, result: bool) -> None:
         if result:

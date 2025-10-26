@@ -1,7 +1,11 @@
+import logging
+
 from aqt.editor import Editor
 from aqt.gui_hooks import editor_did_init_buttons, profile_will_close
 
 from .tts_button import TTSButton
+
+logger = logging.getLogger(__name__)
 
 
 def add_button(buttons: list[str], editor: Editor) -> None:
@@ -16,5 +20,6 @@ def add_button(buttons: list[str], editor: Editor) -> None:
     buttons.append(new_button)
 
 
+logger.info("TTS extension is loaded")
 editor_did_init_buttons.append(add_button)
 profile_will_close.append(TTSButton.shutdown_kokoro)
