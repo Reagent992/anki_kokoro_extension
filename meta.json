@@ -1,1 +1,22 @@
-{"disabled": false, "mod": 0, "conflicts": [], "max_point_version": 0, "min_point_version": 0, "branch_index": 0, "update_enabled": true, "config": {"voice": "af_heart"}}
+{
+  "disabled": false,
+  "name": "Anki Kokoro TTS Extension",
+  "version": "0.1",
+  "human_version": "0.0.1",
+  "mod": 0,
+  "conflicts": [],
+  "max_point_version": 0,
+  "min_point_version": 0,
+  "branch_index": 0,
+  "update_enabled": true,
+  "config": {
+    "api_url": "http://127.0.0.1:8880",
+    "audio_format": "mp3",
+    "autostart": "true",
+    "idle_timeout_in_seconds": 5,
+    "path_to_kokoro_executable": "/home/rea/dev/external/Kokoro-FastAPI/start-gpu-siple.sh",
+    "shutdown_by_timer": "true",
+    "voice": "af_heart"
+  }
+}
+

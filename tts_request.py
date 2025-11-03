@@ -13,6 +13,5 @@ class TTSRequest:
     init_note_id: int | None
     field_index: int
     clean_text: str
-    note_guid: str
+    init_note_guid: str
     config: Config
-

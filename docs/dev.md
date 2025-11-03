@@ -10,7 +10,7 @@
 
 ## features backlog
 
-- ...
+- If noting is selected, TTS the whole line.
 
 ## dev tips
 
@@ -20,6 +20,8 @@
 - launch anki with the test profile using `anki -p <profile_name>`
 
 ## Implementation details
+
+- The Editor object represents an open editor window. One editor can create multiple notes.
 
 ### Adding audio tag to a card
 
@@ -32,10 +34,3 @@ Problems:
 - Default methods for inserting text into a card are not suitable.
 
 To solve these problems, some fragile logic was added (like SQL queries and JavaScript in the webview).
-
-### Двойной запуск
-
-Если быстро нажать TTS два раза, в разных карточках, то скрипт запуска будет вызыван дважды.
-
-- Возможно надо вынести KokoroManager и Config в **init**.py как глобальные переменные, чтобы
-  они точно были общие для разных editor.

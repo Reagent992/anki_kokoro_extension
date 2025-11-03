@@ -1,7 +1,8 @@
+import logging
 import os
 import signal
+import subprocess
 import time
-from subprocess import Popen
 from time import sleep
 
 import requests
@@ -16,11 +17,13 @@ from .settings import (
     Config,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class KokoroManager:
     def __init__(self, config: Config) -> None:
         self.config = config
-        self._process: Popen | None = None
+        self._process: subprocess.Popen | None = None
         self._is_kokoro_up: bool = False
         self._last_used: float = time.time()
         self._idle_timer: QTimer | None = None
@@ -39,6 +42,7 @@ class KokoroManager:
         self._idle_timer.start()
 
     def shutdown_kokoro(self) -> None:
+        logger.info("Shutdown Kokoro")
         if self._process is not None:
             os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
             self._is_kokoro_up = False
@@ -68,11 +72,14 @@ class KokoroManager:
             sleep(delay * attempt)
         raise TimeoutError()
 
-    def _create_process(self) -> Popen:
-        return Popen(
+    def _create_process(self) -> subprocess.Popen:
+        logger.info("Launching kokoro")
+        return subprocess.Popen(
             self.config.path_to_exec,
             cwd=self.config.path_to_exec.parent,
             start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
 
     def start_kokoro(self) -> bool:

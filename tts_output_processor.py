@@ -4,7 +4,6 @@ import logging
 
 from anki.notes import Note, NoteId
 from aqt import mw
-from aqt.editor import EditorMode
 from aqt.operations import CollectionOp
 
 from .tts_request import TTSRequest
@@ -28,30 +27,27 @@ class TTSOutputProcessor:
         self._field_index = request.field_index
         self._init_note_id = request.init_note_id
         self._clean_text = request.clean_text
-        self._note_guid = request.note_guid
+        self._init_note_guid = request.init_note_guid
         self.config = request.config
+        logger.info(
+            "Request data:\n%s",
+            "\n".join(f"{k:<20} = {v}" for k, v in request.__dict__.items()),
+        )
 
     @property
     def note(self) -> Note | None:
         note = None
-        if note := self._editor.note:
+        if self._editor.note and self._editor.note.guid == self._init_note_guid:
+            note = self._editor.note
+            logger.info("Note passed id: %s", note.id)
             return note
-        elif self._init_note_id:
+        if self._init_note_id:
             logger.info("Note loaded from _init_note_id")
             note = mw.col.get_note(NoteId(self._init_note_id)) if mw.col else None
-        elif self._note_guid:
+        elif self._init_note_guid:
             logger.info("Note loaded from guid")
             note = self._get_note_by_guid()
         return note
-
-    def _add_media_to_collection(self, content: bytes) -> str:
-        """Add the audio bytes to the Anki media collection and return the filename."""
-        assert mw.col
-        file_name = f"{sanitize_filename(self._clean_text)}.{self.config.audio_format}"
-        return mw.col.media.write_data(
-            file_name,
-            content,
-        )
 
     def process_audio(self, content: bytes) -> None:
         """
@@ -63,26 +59,35 @@ class TTSOutputProcessor:
 
         # Determine the note to update and check if audio addition is still needed
         note = self.note
-        logger.info("Note: %s", note)
         if not note:
-            logger.warning("Audio not added: editor closed and note not found")
+            logger.warning("Audio not added: note not found")
             return
-
         filename = self._add_media_to_collection(content)
         # get tag and play audio
         tag = self._editor.fnameToLink(filename)
-
-        if (
-            self._editor.editorMode in (EditorMode.ADD_CARDS, EditorMode.EDIT_CURRENT)
-            and self._editor.web
-        ):
+        if self._should_use_webview_update():
             # Update note through webview if card editor is open
             self._append_tag_through_webview(note, tag)
         else:
             # Update existing note in the collection
             self._update_note_in_collection(note, tag)
 
+    def _should_use_webview_update(self) -> bool:
+        if not self._editor.web or not self._editor.note:
+            return False
+        return self._editor.note.guid == self._init_note_guid
+
+    def _add_media_to_collection(self, content: bytes) -> str:
+        """Add the audio bytes to the Anki media collection and return the filename."""
+        assert mw.col
+        file_name = f"{sanitize_filename(self._clean_text)}.{self.config.audio_format}"
+        return mw.col.media.write_data(
+            file_name,
+            content,
+        )
+
     def _append_tag_through_webview(self, note: Note, tag: str) -> None:
+        logger.info("Adding audio tag through webview")
         js = f"""
         (function() {{
             try {{
@@ -102,10 +107,10 @@ class TTSOutputProcessor:
 
         assert self._editor.web
         self._editor.web.evalWithCallback(
-            js, lambda result: self.__handle_webview_result(result, note, tag)
+            js, lambda result: self._handle_webview_result(result, note, tag)
         )
 
-    def __handle_webview_result(self, result: dict, note: Note, tag: str) -> None:
+    def _handle_webview_result(self, result: dict, note: Note, tag: str) -> None:
         logger.info("Webview append result: %s", result)
         if not result or not result.get("result"):
             logger.warning(
@@ -123,7 +128,7 @@ class TTSOutputProcessor:
         """
         try:
             note_id_result = mw.col.db.execute(  # pyright: ignore[reportOptionalMemberAccess]
-                "SELECT id FROM notes WHERE guid = ?", self._note_guid
+                "SELECT id FROM notes WHERE guid = ?", self._init_note_guid
             )
             if not note_id_result:
                 return None
@@ -132,14 +137,16 @@ class TTSOutputProcessor:
             logger.info(f"Found note by GUID: {note}")
             return note
         except Exception as e:
-            logger.error(f"Error retrieving note by GUID {self._note_guid}: {e}")
+            logger.error(f"Error retrieving note by GUID {self._init_note_guid}: {e}")
             return None
 
     def _update_note_in_collection(self, note: Note, tag: str) -> None:
         """Update the given note in the collection asynchronously."""
+        logger.info("Adding an audio tag through collection")
         current_text = note.fields[self._field_index]
         note.fields[self._field_index] = current_text + tag
         CollectionOp(
             parent=mw,
-            op=lambda col: col.update_note(note),
+            op=lambda col: col.update_note(note, skip_undo_entry=True),
+            # skip_undo_entry=True due to: Ctrl+Z cancels the audio tag entry.
         ).run_in_background()
