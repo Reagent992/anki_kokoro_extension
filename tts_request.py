@@ -7,7 +7,7 @@ from .settings import Config
 
 @dataclass(frozen=True)
 class TTSRequest:
-    """Dataclass for encapsulating TTS request data."""
+    """Data class that encapsulates TTS request data."""
 
     editor: Editor
     init_note_id: int | None

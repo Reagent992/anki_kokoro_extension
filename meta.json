@@ -13,10 +13,9 @@
     "api_url": "http://127.0.0.1:8880",
     "audio_format": "mp3",
     "autostart": "true",
-    "idle_timeout_in_seconds": 5,
-    "path_to_kokoro_executable": "/home/rea/dev/external/Kokoro-FastAPI/start-gpu-siple.sh",
+    "idle_timeout_in_seconds": 120,
+    "path_to_kokoro_executable": "/home/rea/dev/external/Kokoro-FastAPI/start-gpu-simplified.sh",
     "shutdown_by_timer": "true",
     "voice": "af_heart"
   }
 }
-

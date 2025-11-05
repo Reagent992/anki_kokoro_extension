@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class TTSOutputProcessor:
     """
-    Handles the insertion of TTS-generated audio into an Anki note.
+    Handles inserting TTS-generated audio into Anki notes.
 
     This class receives audio content produced by a TTS engine, adds it to the
     collection's media folder, and updates the target note's field with a playable
@@ -127,17 +127,20 @@ class TTSOutputProcessor:
         Returns the Note object if found and valid, otherwise None.
         """
         try:
-            note_id_result = mw.col.db.execute(  # pyright: ignore[reportOptionalMemberAccess]
+            assert mw.col and mw.col.db
+            note_id_result = mw.col.db.execute(
                 "SELECT id FROM notes WHERE guid = ?", self._init_note_guid
             )
             if not note_id_result:
                 return None
             note_id = note_id_result[0][0]
-            note = mw.col.get_note(note_id)  # pyright: ignore[reportOptionalMemberAccess]
-            logger.info(f"Found note by GUID: {note}")
+            note = mw.col.get_note(note_id)
+            logger.info("Found note by GUID: %s", note)
             return note
         except Exception as e:
-            logger.error(f"Error retrieving note by GUID {self._init_note_guid}: {e}")
+            logger.error(
+                "Error retrieving note by GUID %s: %s", self._init_note_guid, e
+            )
             return None
 
     def _update_note_in_collection(self, note: Note, tag: str) -> None:
