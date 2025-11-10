@@ -7,6 +7,8 @@
 - [x] Add keyboard shortcut (Ctrl+SHIFT+T)
 - [x] Anything inserted while TTS is loading is overwritten (deleted).
 - [x] FIXME: There is a chance that Kokoro will be started twice.
+- [ ] FIXME: Change the way the audio is played. Currently, if you run a TTS in the background and a note with audio is being reviewed, the audio from the note is played instead of the new audio.
+- [x] FIXME: If you add a TTS to a note containing HTML like this: `<ul><li>...`, the HTML is cleared.
 
 ## features backlog
 

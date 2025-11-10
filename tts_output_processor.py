@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 
 from anki.notes import Note, NoteId
@@ -96,7 +94,7 @@ class TTSOutputProcessor:
                 if (!field) {{
                     return {{ result: false, error: 'field {self._field_index} not found' }};
                 }}
-                field.textContent += "{tag}";
+                field.innerHTML += "{tag}";
                 field.dispatchEvent(new InputEvent("input", {{ bubbles: true }}));
                 return {{ result: true }};
             }} catch (e) {{
